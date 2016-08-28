@@ -1,0 +1,47 @@
+#######################################################################
+#
+# TARGET should be set by autoconf only.  Don't touch it.
+#
+# The SRCS definition should list ALL source files.
+#
+# The HEADERS definition should list ALL header files
+#
+# RLM_CFLAGS defines addition C compiler flags.  You usually don't
+# want to modify this, though.  Get it from autoconf.
+#
+# The RLM_LIBS definition should list ALL required libraries.
+# These libraries really should be pulled from the 'config.mak'
+# definitions, if at all possible.  These definitions are also
+# echoed into another file in ../lib, where they're picked up by
+# ../main/Makefile for building the version of the server with
+# statically linked modules.  Get it from autoconf.
+#
+# RLM_INSTALL is the names of additional rules you need to install
+# some particular portion of the module.  Usually, leave it blank.
+#
+#######################################################################
+TARGET      = @targetname@
+SRCS        = rlm_pms.c parse.c
+HEADERS     = rlm_pms.h $(top_builddir)/src/modules/rlm_sql/rlm_sql.h
+RLM_CFLAGS  = -I/usr/include -I$(top_builddir)/src/modules/rlm_pms -I$(top_builddir)/src/modules/rlm_sql $(INCLTDL)
+RLM_LIBS    = $(LIBLTDL) -lm
+RLM_INSTALL = 
+RLM_SUBDIRS	= 
+
+## this uses the RLM_CFLAGS and RLM_LIBS and SRCS defs to make TARGET.
+include ../rules.mak
+
+$(LT_OBJS): $(HEADERS)
+
+## the rule that RLM_INSTALL tells the parent rules.mak to use.
+#install-drivers:
+#	@$(MAKE) $(MFLAGS) WHAT_TO_MAKE=install common
+
+common:
+	@for dir in $(RLM_SUBDIRS); do \
+		echo "Making $(WHAT_TO_MAKE) in $$dir..."; \
+		$(MAKE) $(MFLAGS) -C $$dir $(WHAT_TO_MAKE) || exit $$?; \
+	done
+	
+#install-pms:
+#	touch .

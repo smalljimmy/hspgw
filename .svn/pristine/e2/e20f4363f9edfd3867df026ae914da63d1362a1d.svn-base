@@ -1,0 +1,80 @@
+AC_PREREQ([2.53])
+AC_INIT(rlm_pms_1.c) # change 'pms_1'
+AC_REVISION($Revision$)
+AC_DEFUN(modname,[rlm_pms_1]) # change 'pms_1'
+
+if test x$with_[]modname != xno; then
+
+	AC_PROG_CC
+	AC_PROG_CPP
+
+
+    pms_1_ldflags="-L/opt/oracle/instantclient_11_1"
+
+	dnl put configuration checks here.
+	dnl set $fail to what's missing, on fatal errors.
+	dnl use AC_MSG_WARN() on important messages.
+	AC_CHECK_LIB(c, printf,
+		[ pms_1_ldflags="$pms_1_ldflags -lm" ],
+		[ fail=$fail" printf" ]
+	)
+
+	AC_CHECK_HEADER(stdio.h,
+		[ pms_1_cflags="$pms_1_cflags -I/usr/include -I/opt/oracle/instantclient_11_1/sdk/include" ],
+		[ fail=$fail" stdio.h" ]
+	)
+
+	AC_CHECK_HEADERS(stdio.h stdlib.h)  # for the config.h defs
+	AC_CHECK_FUNCS(printf)  # for the config.h defs
+
+
+
+
+	dnl # don't ask... this is done to avoid autoconf stupidities.
+	ln -s ../../../install-sh install-sh
+
+	dnl #
+	dnl #  Don't change the variable name here.  Autoconf goes bonkers
+	dnl #  if you do.
+	dnl #
+	AC_CONFIG_SUBDIRS($mysubdirs)
+	rm install-sh
+
+	dnl #
+	dnl # Don't bother looking for errors in the child directories
+	dnl #
+
+
+
+	targetname=modname     # keep this!  Don't change!
+else
+	targetname=            # keep this!  Don't change!
+	echo \*\*\* module modname is disabled.  # keep this!  Don't change!
+fi
+
+dnl  Don't change this section.
+if test x"$fail" != x""; then
+	if test x"${enable_strict_dependencies}" = x"yes"; then
+		AC_MSG_ERROR([set --without-]modname[ to disable it explicitly.])
+	else
+		AC_MSG_WARN([silently not building ]modname[.])
+		AC_MSG_WARN([FAILURE: ]modname[ requires: $fail.]);
+		targetname=""
+	fi
+fi
+
+
+AC_SUBST(pms_1_cflags)  # change 'pms_1'
+AC_SUBST(pms_1_ldflags)  # change 'pms_1'
+
+AC_CONFIG_HEADER(config.h)  # delete if you don't want a config.h file.
+
+#AC_SUBST(targetname)  # keep this!  Don't change!
+#AC_OUTPUT(Makefile)  # keep this!  Don't change!
+
+
+AC_SUBST(targetname)
+AC_SUBST(SQL_MODULES)
+AC_OUTPUT(\
+        ./Makefile 
+)

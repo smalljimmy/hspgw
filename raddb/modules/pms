@@ -1,0 +1,78 @@
+# -*- text -*-
+#
+#  $Id$
+
+# central pmsgw module configuration 
+pms { 
+
+    sql-instance-name = "sql"
+
+	# package prefix - "." is intentional
+	package-prefix = "HSPGW_PMS_PROCESS_FUNC."
+	
+	# views/tables used in sql statements
+	v_config	= "HSPGW_CONFIG_VIEW"
+	v_logevents	= "HSPGW_LOGEVENTS_VIEW"
+	t_acctrack  = "HSPGW_ACCOUNT_TRACKER"
+	t_log		= "HSPGW_LOG"
+
+	#######################################################################
+	#  PMS General Queries
+	#######################################################################
+
+	pms_all_config_query	= "SELECT * FROM ${v_config} WHERE IS_ENABLED = 1"
+	pms_all_events_query	= "SELECT * FROM ${v_logevents}"
+
+	pms_config_query		= "SELECT * FROM ${v_config} WHERE ZONE_ID = %{SCS-SPP-ZoneID} AND IS_ENABLED = 1 AND TARIFF_ID = %{SCS-HSPGW-TARIFFID}"
+
+#	pms_acctrack_query		= "SELECT HAT_TRACKER_DEADLINE, HAT_TRACKER_BILLED FROM ${t_acctrack} WHERE HAT_TRACKER_LOCATIONID = %{SCS-SPP-ZoneID} AND HAT_TRACKER_USR = '%{SCS-SPP-StrippedUser}' AND Lower(HAT_TRACKER_PWD) = Lower('%{User-Password}')"
+
+#	pms_acc_qry_by_sessid	= "SELECT HAT_TRACKER_DEADLINE, HAT_TRACKER_PWD, HAT_TRACKER_GUEST_ID FROM ${t_acctrack} WHERE HAT_TRACKER_SESS_ID = '%{Acct-Session-Id}' AND HAT_TRACKER_BILLED = 0"
+#	pms_acc_qry_by_usrloc	= "SELECT HAT_TRACKER_DEADLINE, HAT_TRACKER_PWD, HAT_TRACKER_GUEST_ID FROM ${t_acctrack} WHERE HAT_TRACKER_LOCATIONID = %{SCS-SPP-ZoneID} AND HAT_TRACKER_USR = '%{SCS-SPP-StrippedUser}' AND HAT_TRACKER_BILLED = 0"
+
+#	pms_acctrack_insert		= "INSERT INTO ${t_acctrack} VALUES (%{SCS-SPP-ZoneID}, '%%s', '%%s', '%{Acct-Session-Id}', %%d, 0, '%%s')"
+
+#	pms_acc_upd_gid			= "UPDATE ${t_acctrack} set HAT_TRACKER_GUEST_ID = '%%s' WHERE HAT_TRACKER_LOCATIONID = %{SCS-SPP-ZoneID} AND HAT_TRACKER_USR = '%{SCS-SPP-StrippedUser}' AND Lower(HAT_TRACKER_PWD) = Lower('%%s')"
+
+#   pms_acc_upd_billed		= "UPDATE ${t_acctrack} SET HAT_TRACKER_BILLED = 1 WHERE HAT_TRACKER_LOCATIONID = %{SCS-SPP-ZoneID} AND HAT_TRACKER_USR = '%{SCS-SPP-StrippedUser}' AND HAT_TRACKER_BILLED = 0"
+
+#	pms_acctrack_purge		= "DELETE FROM ${t_acctrack} WHERE (%%d - HAT_TRACKER_DEADLINE > 0)"
+
+#	pms_logger_insert		= "INSERT INTO ${t_log} (PK_LLOCATIONID, DF_LHSPID_HSRM, LOGEVENT_ID, LOG_SESS_ID, LOG_DESC) VALUES (%%d, %%d, %%d, '%{Acct-Session-Id}', '%%s')"
+    pms_logger_insert		= "INSERT INTO ${t_log} (SZL_ZONE_LOGIN_TYPE_ID, HLG_HSPID_HSRM, HLG_LOGEVENT_ID, HLG_SESS_ID, HLG_DESC, HLG_TIMESTAMP, HLG_CREA_DATE, HLG_CREA_USER) VALUES (%%d, %%d, %%d, '%{Acct-Session-Id}', '%%s', sysdate, sysdate, 'radius@hspgw')"
+	#       pms_sim_access                  = "SELECT HSPGW_PMS_PROCESS_FUNC.hspgw_sim_sessions(%s, '%s') from dual"
+	# workaround for sim_sessions performance problem 1.7.13 hagen
+	pms_sim_access                  = "SELECT '0' from dual where '%s' != 'x' or '%s' != 'x'"
+	pms_gw_set_state		= "SELECT ${package-prefix}hspgw_set_state('%s', 'host_%s') from dual"
+	pms_gw_shutdown			= "SELECT ${package-prefix}hspgw_shutdown('host_%s', %d) from dual"
+
+	#######################################################################
+	#  PMS Definitions (required to create char array[length])
+	#######################################################################
+
+	pms_conf_locid_delimiter	= ","
+	pms_conf_realm_delimiter	= "@"
+	pms_conf_tariff_delimiter	= "#"
+	pms_conf_allowed_realm		= "hspgw"
+	pms_conf_type_prefix		= "PMS_%s"
+
+	
+	#######################################################################
+	#  PMS Socket Definitions
+	#######################################################################
+	pms_conf_sckt_conn_timeout	= 3
+	pms_conf_sckt_recv_ntimeout	= 0
+	pms_conf_sckt_recv_utimeout	= 300000
+	pms_conf_sckt_max_trials	= 30
+	pms_conf_sckt_max_timeouts  = 3
+	
+	#######################################################################
+		#  Snmptrap Command
+	#######################################################################
+	#pms_snmptrap_command = "/usr/local/bin/snmptrap -c public -v 2c  '' ''  NET-SNMP-FREERADIUS-MIB::freeradiusNotification  freeradiusNotification s %s"
+	#pms_snmptrap_command = "snmptrap -v 2c -c public 10.10.10.104 '''' FREERADIUS-PRODUCT-HSPGW-MIB::Prot-1-Notif FREERADIUS-PRODUCT-HSPGW-MIB::eventMsg.0 s %s FREERADIUS-PRODUCT-HSPGW-MIB::zoneID.0 i %d"
+	pms_snmptrap_command = "/usr/bin/snmptrap -v 2c -c public 10.10.10.104 \"\" FREERADIUS-PRODUCT-HSPGW-MIB::Prot-1-Notif FREERADIUS-PRODUCT-HSPGW-MIB::eventMsg.0 s \"%s\""
+
+}
+
+

@@ -1,0 +1,10 @@
+#
+#	TESTS	1
+#
+# expected:SC_HSPGW_AUTH_MALFORMED_REQ
+#
+WISPr-Location-Name="MALFORMED"
+Acct-Session-Id=A0000004
+User-Name="105#51@hspgw"
+User-Password=abati
+

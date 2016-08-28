@@ -1,0 +1,53 @@
+installation instructions
+=========================
+
+(i)   Extract the tarball to an arbitrary directory:
+----------------------------------------------------
+bash-3.0#gunzip hspgw_inst_<v20xxxxxx>.tar.gz
+bash-3.0#tar xvf hspgw_inst_<v20xxxxxx>.tar
+
+(ii)  Change directory to ./hspgw_setup/install:
+------------------------------------------------
+bash-3.0#cd hspgw-setup/install
+
+(iii) Execute install.sh with apropriate parameter:
+---------------------------------------------------
+bash-3.0#./install.sh [t|s|p]
+
+	"t: development environment"
+	"s: staging environment"
+	"p: production environment"
+	
+Only lower case letters are accepted as parameter!
+
+Content of the tarball:
+=======================
+
+./hspgw_setup/src: 
+------------------
+Directory includes all binaries and configuration files for the HSPGW
+
+./hspgw_setup/config: 
+---------------------
+The directory contains the subfolders dev, test and prod. Each subfolder contains the environment specific configuration files:
+- clients.conf: defines the clients that can request the HSPGW (normally the RCAR).
+- sql.conf: It contains connection information for the SPP DB.
+- tnsnames.ora: each environment has other connection information for the data base.
+
+./hspgw_setup/install: 
+----------------------
+The driectory contains the install scripts install.sh, preinstall.sh and postinstall.sh
+- install.sh: Main script. It calls and controls the other scripts.
+- preinstall.sh: This script check some preconditions for the HSPGW installation (oracle installation and configuration and some necessary libraries) and copies the HSPGW binaries to its destination folder /opt/hspgw.
+- postinstall.sh: Copies the environment specific configuration files to their destination folders, sets the libary path and establishes links.
+
+./hspgw_setup/tools: 
+--------------------
+The directory contains the binaries for oracle instanclient 11.1
+
+./hspgw_setup/lib: 
+------------------
+Contains necessary libraries installed with preinstall.sh
+
+
+s

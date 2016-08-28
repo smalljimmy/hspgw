@@ -1,0 +1,9 @@
+#
+#	TESTS	1
+#
+# expected:Cisco-Account-Info = "roaming@hspgw-3"
+#
+WISPr-Location-Name="SCS:CH,1682"
+Acct-Session-Id=A0000004
+User-Name="112#14@hspgw"
+User-Password=Fritsche

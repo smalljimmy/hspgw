@@ -1,0 +1,120 @@
+# -*- text -*-
+#
+#  $Id$
+
+# central module configuration 
+pms_1 { 
+
+    sql-instance-name = "sql"
+
+	# package prefix - "." is intentional
+	package-prefix = "HSPGW_PMS_PROCESS_FUNC."
+	
+	# views/tables used in sql statements
+	v_config	= "HSPGW_CONFIG_VIEW"
+	t_config 	= "HSPGW_CONFIGURATION"
+	v_hspgw_occupancy = "HSPGW_OCCUPANCY_VIEW"
+	v_logevents	= "HSPGW_LOGEVENTS_VIEW"
+	t_acctrack  = "HSPGW_ACCOUNT_TRACKER"
+	t_log		= "HSPGW_LOG"
+	t_acctrack_relogin = "HSPGW_ACCTR_RELOGIN"
+	t_occupancy_relogin = "HSPGW_OCCUPANCY_RELOGIN"
+
+	#######################################################################
+	#  PMS General Queries
+	#######################################################################
+
+	pms_all_config_query	= "SELECT * FROM ${v_config} WHERE IS_ENABLED = 1"
+
+	pms_all_events_query	= "SELECT * FROM ${v_logevents}"
+
+	pms_config_query        = "SELECT a.* FROM ${v_config} a INNER JOIN ${v_config} b on NVL(a.HSPGW_GROUP_ID, a.ZONE_ID) = NVL(b.HSPGW_GROUP_ID, b.ZONE_ID) and a.TARIFF_ID = b.TARIFF_ID WHERE b.ZONE_ID = %{SCS-SPP-ZoneID} AND b.TARIFF_ID = %{SCS-HSPGW-TARIFFID} AND a.IS_ENABLED = 1" 
+	# we need the same query but we have no request. There can be more than one row. 
+
+	pms_config_query_zid    = "SELECT * FROM ${v_config} WHERE ZONE_ID = %s AND IS_ENABLED = 1"
+
+	pms_acctrack_relogin_insert = "INSERT INTO ${t_acctrack_relogin} (HAT_TRACKER_ID, HAR_MAC_ADDRESS, HAR_FRAMED_IP, HGP_GROUP_ID, HAR_WEBPROXY) VALUES (%%d, '%%s', '%%s', %%d, %%d)"
+
+	pms_occupancy_relogin_insert = "INSERT INTO ${t_occupancy_relogin} (HHO_OID, HOR_MAC_ADDRESS, HOR_FRAMED_IP, HGP_GROUP_ID, HOR_WEBPROXY) VALUES (%%d, '%%s', '%%s', %%d, %%d)"
+
+	pms_acctrack_query      = "SELECT HAT_TRACKER_DEADLINE, HAT_TRACKER_BILLED, HAT_TRACKER_ID FROM ${t_acctrack} WHERE HAT_TRACKER_ZONEID IN (SELECT a.ZONE_ID FROM ${v_config} a INNER JOIN ${v_config} b on NVL(a.HSPGW_GROUP_ID, a.ZONE_ID) = NVL(b.HSPGW_GROUP_ID, b.ZONE_ID) and a.TARIFF_ID = b.TARIFF_ID WHERE b.ZONE_ID = %{SCS-SPP-ZoneID} AND b.TARIFF_ID = %{SCS-HSPGW-TARIFFID} AND a.IS_ENABLED = 1) AND HAT_TRACKER_USR = '%{SCS-SPP-StrippedUser}' AND Lower(HAT_TRACKER_PWD) = Lower('%%s') AND HTC_TARIFF_ID=%{SCS-HSPGW-TARIFFID}"
+
+	pms_acctrack_relogin_query  = "SELECT HAT_TRACKER_ID, HAR_MAC_ADDRESS, HAR_FRAMED_IP, HGP_GROUP_ID, HAR_WEBPROXY FROM ${t_acctrack_relogin} WHERE HAT_TRACKER_ID = %%d AND HAR_MAC_ADDRESS = '%%s'"
+
+	pms_occupancy_relogin_query  = "SELECT HHO_OID, HOR_MAC_ADDRESS, HOR_FRAMED_IP, HGP_GROUP_ID, HOR_WEBPROXY FROM ${t_occupancy_relogin} WHERE HHO_OID = %%d AND HOR_MAC_ADDRESS ='%%s'" 
+	
+	pms_acc_qry_by_sessid    = "SELECT HAT_TRACKER_DEADLINE, HAT_TRACKER_PWD, HAT_TRACKER_GUEST_ID, HAT_TRACKER_ZONEID FROM ${t_acctrack} WHERE HAT_TRACKER_SESS_ID = '%{Acct-Session-Id}' AND HAT_TRACKER_BILLED = 0 AND HTC_TARIFF_ID=%{SCS-HSPGW-TARIFFID}"
+
+	pms_acc_qry_by_usrloc	= "SELECT HAT_TRACKER_DEADLINE, HAT_TRACKER_PWD, HAT_TRACKER_GUEST_ID, HAT_TRACKER_ZONEID FROM ${t_acctrack} WHERE HAT_TRACKER_ZONEID IN (SELECT a.ZONE_ID FROM ${v_config} a INNER JOIN ${v_config} b on NVL(a.HSPGW_GROUP_ID, a.ZONE_ID) = NVL(b.HSPGW_GROUP_ID, b.ZONE_ID) and a.TARIFF_ID = b.TARIFF_ID WHERE b.ZONE_ID = %{SCS-SPP-ZoneID} AND a.IS_ENABLED = 1) AND HAT_TRACKER_USR = '%{SCS-SPP-StrippedUser}' AND HAT_TRACKER_BILLED = 0 AND HTC_TARIFF_ID=%{SCS-HSPGW-TARIFFID}"
+	
+	pms_acctrack_insert     = "INSERT INTO ${t_acctrack} (HAT_TRACKER_ZONEID, HAT_TRACKER_USR, HAT_TRACKER_PWD, HAT_TRACKER_SESS_ID, HAT_TRACKER_DEADLINE, HAT_TRACKER_BILLED, HAT_TRACKER_GUEST_ID, HAT_TRACKER_TARIFF_KEY, HTC_TARIFF_ID) VALUES (%%d, '%%s', '%%s', '%{Acct-Session-Id}', %%d, 0, '%%s', '%%s', %%d)"
+
+	pms_acc_upd_gid	        = "UPDATE ${t_acctrack} set HAT_TRACKER_GUEST_ID = '%%s' WHERE HAT_TRACKER_ZONEID = %%d AND HAT_TRACKER_USR = '%{SCS-SPP-StrippedUser}' AND HTC_TARIFF_ID=%{SCS-HSPGW-TARIFFID} AND Lower(HAT_TRACKER_PWD) = Lower('%%s')"
+
+	pms_acc_upd_billed      = "UPDATE ${t_acctrack} SET HAT_TRACKER_BILLED = 1 WHERE HAT_TRACKER_ZONEID IN (SELECT a.ZONE_ID FROM ${v_config} a INNER JOIN ${v_config} b on NVL(a.HSPGW_GROUP_ID, a.ZONE_ID) = NVL(b.HSPGW_GROUP_ID, b.ZONE_ID) and a.TARIFF_ID = b.TARIFF_ID WHERE b.ZONE_ID = %{SCS-SPP-ZoneID} AND a.IS_ENABLED = 1) AND HAT_TRACKER_USR = '%{SCS-SPP-StrippedUser}' AND HTC_TARIFF_ID=%{SCS-HSPGW-TARIFFID} AND HAT_TRACKER_BILLED = 0"
+
+	pms_acc_upd_billed_ses  = "UPDATE ${t_acctrack} SET HAT_TRACKER_BILLED = 1 WHERE HAT_TRACKER_SESS_ID = '%{Acct-Session-Id}' AND HAT_TRACKER_BILLED = 0"
+
+	pms_acctrack_relogin_purge = "DELETE FROM ${t_acctrack_relogin} a WHERE EXISTS(SELECT * FROM ${t_acctrack} b WHERE (%%d - HAT_TRACKER_DEADLINE > 0) AND b.HAT_TRACKER_ID = a.HAT_TRACKER_ID)"
+
+	pms_acctrack_purge      = "DELETE FROM ${t_acctrack} WHERE (%%d - HAT_TRACKER_DEADLINE > 0)"
+
+	pms_logger_insert       = "INSERT INTO ${t_log} (SZL_ZONE_LOGIN_TYPE_ID, HLG_HSPID_HSRM, HLG_LOGEVENT_ID, HLG_SESS_ID, HLG_DESC, HLG_TIMESTAMP, HLG_CREA_DATE, HLG_CREA_USER) VALUES (%%d, %%d, %%d, '%{Acct-Session-Id}', '%%s', sysdate, sysdate, 'radius@hspgw')"
+	
+#	pms_set_deadline        = "UPDATE ${t_config} SET HCO_GO_THROUGH_DEADLINE = %%d WHERE HCO_CONFIGURATION_ID = (SELECT c.HCO_CONFIGURATION_ID FROM BTO_SPP.${t_config} c, BTO_SPP.SPP_ZONE_LOGINTYPE zlt, BTO_SPP.SPP_LOGINTYPE lt WHERE zlt.SZO_ZONE_ID = %{SCS-SPP-ZoneID} AND lt.SLT_LOGIN_TYPE_ID = c.SZL_ZONE_LOGIN_TYPE_ID AND zlt.SLT_LOGIN_TYPE_ID = c.SZL_ZONE_LOGIN_TYPE_ID AND lt.SLT_KEY = 'HSPGW')"
+	pms_set_deadline        = "UPDATE ${t_config} SET HCO_GO_THROUGH_DEADLINE = %d WHERE HCO_CONFIGURATION_ID = %s"	
+
+	pms_upd_activ_gw        = "UPDATE ${t_config} SET HCO_ACTIVE_GW = '%%s' WHERE HCO_CONFIGURATION_ID = %%s"
+	
+	pms_insert_chk_rn       = "SELECT ${package-prefix}hspgw_chkins_rn(%s, '%s') from dual" # probably not used
+	
+	pms_proc_go             = "SELECT ${package-prefix}hspgw_proc_go(%s, '%s', %s, %d) from dual"
+	pms_proc_gi             = "SELECT ${package-prefix}hspgw_proc_gi(%s, '%s', '%s', %s, %d) from dual"
+	pms_proc_gc             = "SELECT ${package-prefix}hspgw_proc_gc(%s, '%s','%s', '%s', %s, %d) from dual"
+#	pms_relogin             = "SELECT ${package-prefix}hspgw_relogin('%s', '%s') from dual"
+	
+	pms_consolidate_db      = "SELECT ${package-prefix}hspgw_consolidate_occupancy(%s) from dual"
+	pms_udp_dbsynch_ts      = "UPDATE ${t_config} SET HCO_DBSYNCH_TS = %d WHERE HCO_CONFIGURATION_ID = %s"
+	pms_clear_timestamp     = "UPDATE ${t_config} SET HCO_DBSYNCH_TS = null WHERE HCO_CONFIGURATION_ID = %s"
+	pms_set_ecot            = "UPDATE ${t_config} SET HCO_ECOT = %s WHERE HCO_CONFIGURATION_ID = %s"
+	
+	#todo: add the HHO_ACC_DEADLINE CONDITION !!
+	pms_occup_by_gnrn        = "SELECT c.HCO_CONFIGURATION_ID, c.HHO_OID, c.HHR_RN, c.HHO_GN, c.HHO_GID, c.HHO_CI_DATE, a.zone_id, a.tariff_key, a.sess_timeout, a.tariff_id, c.hho_acc_deadline, a.amount_per_unit from ${v_hspgw_occupancy} c INNER JOIN ${v_config} a on a.configuration_id = c.hco_configuration_id INNER JOIN ${v_config} b on NVL(a.HSPGW_GROUP_ID, a.ZONE_ID) = NVL(b.HSPGW_GROUP_ID, b.ZONE_ID) and a.TARIFF_ID = b.TARIFF_ID WHERE b.ZONE_ID = %{SCS-SPP-ZoneID} AND b.TARIFF_ID = %{SCS-HSPGW-TARIFFID} AND a.IS_ENABLED = 1 AND c.hhr_rn = '%{SCS-SPP-StrippedUser}' AND Lower(c.hho_gn) LIKE Lower('%%s')"
+
+	#######################################################################
+	#  PMS Definitions (required to create char array[length])
+	#######################################################################
+
+	pms_conf_locid_delimiter	 = ","
+	pms_conf_realm_delimiter	 = "@"
+	pms_conf_tariff_delimiter	 = "#"
+	# delimiter to separate multiple guestnames. Example: "Meier; Huber". Extended regular expressions may be used.
+	# "[;/]\s*" means: either a ; or a /, optionally followed by one ore more spaces.
+	pms_conf_guestname_delimiter = "[;/]\s*"
+	pms_conf_allowed_realm		 = "hspgw"
+	pms_conf_type_prefix		 = "PMS_%s"
+	
+	# if a guest transfer was accepted, there can be different ASOK CT messages in PA 
+	pms_conf_asok_msgs			= "Guest transfer accepted:PWLAN usage:Posting successful"
+	pms_conf_ctmsg_del			= ":"
+
+	
+	#######################################################################
+	#  PMS Socket Definitions
+	#######################################################################
+	pms_conf_sckt_conn_timeout	= 1
+	pms_conf_sckt_recv_ntimeout	= 3
+	pms_conf_sckt_recv_utimeout	= 0
+	pms_conf_sckt_max_trials	= 1
+	pms_conf_sckt_max_timeouts      = 3
+	pms_conf_sesto_threshold	= 30
+	
+	#######################################################################
+	#  Snmptrap Command
+	#######################################################################
+	#pms_snmptrap_command = "/usr/bin/snmptrap -v 2c -c public 10.10.10.104 '' FREERADIUS-PRODUCT-HSPGW-MIB::Prot-1-Notif FREERADIUS-PRODUCT-HSPGW-MIB::eventMsg.0 s '%s' FREERADIUS-PRODUCT-HSPGW-MIB::zoneID.0 i %s FREERADIUS-PRODUCT-HSPGW-MIB::eventKey.0 s '%s'"
+	
+	
+}
+
+

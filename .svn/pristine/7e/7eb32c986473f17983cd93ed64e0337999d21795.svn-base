@@ -1,0 +1,8 @@
+include ../../../../../Make.inc
+
+TARGET         = rlm_sql_oracle
+SRCS           = sql_oracle.c
+RLM_SQL_CFLAGS =  $(INCLTDL) -I/opt/oracle/instantclient_11_1/sdk/include
+RLM_SQL_LIBS   = -L/opt/oracle/instantclient_11_1 -lclntsh -lm
+
+include ../rules.mak

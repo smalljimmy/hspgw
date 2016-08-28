@@ -1,0 +1,119 @@
+AC_PREREQ([2.59])
+AC_INIT(sql_sqlrelay.c)
+AC_REVISION($Revision$)
+AC_DEFUN(modname,[rlm_sql_sqlrelay])
+
+fail=
+SMART_LIBS=
+SMART_CLFAGS=
+if test x$with_[]modname != xno; then
+
+    dnl ############################################################
+    dnl # Check for command line options
+    dnl ############################################################
+
+    dnl extra argument: --with-sqlrelay-include-dir=DIR
+    sqlrelay_include_dir=
+    AC_ARG_WITH(sqlrelay-include-dir,
+	[AS_HELP_STRING([--with-sqlrelay-include-dir=DIR],
+		[Directory where the sqlrelay includes may be found])],
+	[case "$withval" in
+	    no)
+		AC_MSG_ERROR(Need sqlrelay-include-dir)
+		;;
+	    yes)
+		;;
+	    *)
+		sqlrelay_include_dir="$withval"
+		;;
+	esac])
+
+    dnl extra argument: --with-sqlrelay-lib-dir=DIR
+    sqlrelay_lib_dir=
+    AC_ARG_WITH(sqlrelay-lib-dir,
+	[AS_HELP_STRING([--with-sqlrelay-lib-dir=DIR],
+		[Directory where the sqlrelay libraries may be found])],
+	[case "$withval" in
+	    no)
+		AC_MSG_ERROR(Need sqlrelay-lib-dir)
+		;;
+	    yes)
+		;;
+	    *)
+		sqlrelay_lib_dir="$withval"
+		;;
+	esac])
+
+    dnl extra argument: --with-sqlrelay-dir=DIR
+    AC_ARG_WITH(sqlrelay-dir,
+	[AS_HELP_STRING([--with-sqlrelay-dir=DIR],
+		[Base directory where sqlrelay is installed])],
+	[case "$withval" in
+	    no)
+		AC_MSG_ERROR(Need sqlrelay-dir)
+		;;
+	    yes)
+		;;
+	    *)
+		sqlrelay_lib_dir="$withval/lib"
+		sqlrelay_include_dir="$withval/include"
+		;;
+	esac])
+
+    dnl ############################################################
+    dnl # Check for programs
+    dnl ############################################################
+
+    AC_PROG_CC
+
+    dnl ############################################################
+    dnl # Check for libraries
+    dnl ############################################################
+
+    dnl try to link to libsqlrelay3
+    smart_try_dir="$sqlrelay_lib_dir"
+    #FR_SMART_CHECK_LIB(sqlrelay3, sqlrelay3_open)
+    if test "x$ac_cv_lib_sqlrelay3_sqlrelay3_open" != "xyes"
+    then
+      AC_MSG_WARN([sqlrelay libraries not found. Use --with-sqlrelay-lib-dir=<path>.])
+      #fail="$fail libsqlrelay3"
+      fail=""
+    fi
+
+    dnl ############################################################
+    dnl # Check for header files
+    dnl ############################################################
+
+    smart_try_dir="$sqlrelay_include_dir"
+    #FR_SMART_CHECK_INCLUDE(sqlrelay3.h)
+    if test "x$ac_cv_header_sqlrelay3_h" != "xyes"; then
+      AC_MSG_WARN([sqlrelay headers not found. Use --with-sqlrelay-include-dir=<path>.])
+      #fail="$fail sqlrelay.h"
+      fail=""
+    fi
+
+    targetname=modname
+else
+    targetname=
+    echo \*\*\* module modname is disabled.
+fi
+
+dnl Don't change this section.
+if test "x$fail" != x; then
+	if test "x${enable_strict_dependencies}" = xyes; then
+		AC_MSG_ERROR([set --without-]modname[ to disable it explicitly.])
+	else
+		AC_MSG_WARN([silently not building ]modname[.])
+		AC_MSG_WARN([FAILURE: ]modname[ requires:$fail.]);
+		targetname=
+	fi
+fi
+
+sql_sqlrelay_ldflags="$SMART_LIBS"
+sql_sqlrelay_cflags="$SMART_CFLAGS"
+AC_SUBST(sql_sqlrelay_ldflags)
+AC_SUBST(sql_sqlrelay_cflags)
+AC_SUBST(sqlrelay_lib_dir)
+AC_SUBST(sqlrelay_include_dir)
+AC_SUBST(targetname)
+AC_OUTPUT(Makefile)

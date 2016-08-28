@@ -1,0 +1,145 @@
+2014.02.28 hspgw_inst_bin
+=========================
+Incident-Meldung Seiler Hotels Zermatt - multiple guest names - separator as regex
+Note the following additional line in /opt/hspgw/etc/raddb/modules/pms_*:
+        pms_conf_guestname_delimiter = "[;/]\s*"
+
+which allows the following patterns to be detected as multiple guest names:
+Meier; Huber
+Meier;Huber
+Meier/Huber
+Meier/ Huber
+
+2014.01.23 hspgw_inst_bin_p3_20140123_sqlr_0.50_rud_0.41
+========================================================
+Incident-Meldung Seiler Hotels Zermatt - multiple guest names
+
+2013.10.09 hspgw_inst_bin_p3_20131009_sqlr_0.50_rud_0.41
+========================================================
+Bug "Child is hung ...": added more radlog messages
+
+2013.09.23 hspgw_inst_bin_p3_20130923_sqlr_0.50_rud_0.41
+========================================================
+Bug "Child is hung ...": added debug messages
+
+2013.08.17 hspgw_inst_bin_p3_20130717_sqlr_0.50_rud_0.41
+========================================================
+Bug fixed: Memory leak caused by unfinished sql queries
+
+2013.08.06 hspgw_inst_bin_p3_20130717_sqlr_0.50_rud_0.41
+========================================================
+Added utils folder which is copied to /opt/hspgw/utils
+- restart HSPGW
+- log rotation
+- archive old log files
+- delete old archives
+
+
+2013.08.06 hspgw_inst_bin_p3_20130717_sqlr_0.50_rud_0.41
+========================================================
+Added utils folder which is copied to /opt/hspgw/utils 
+- restart HSPGW
+- log rotation
+- archive old log files
+- delete old archives
+
+2012.11.02 hspgw_p2_20121102
+============================
+Feature improvements:
+- added support for pms grouping
+
+2012.10.04 hspgw_p2_20121004
+============================
+notes:
+- added api and driver for SQLRelay 0.47
+- disabled oracle driver
+
+2012.07.16 hspgw_p2_v20120709
+=============================
+Feature improvements:
+- added modul for Hogatex support
+
+2011.03.16 hspgw_v20110316
+==========================
+Feature improvements:
+- n/a
+Bug fixes: 
+- single-quotes in user names caused a data base error. Single-quotes in user names are replaced now by two single-quotes in all UPDATE- and INSERT-SQL-statements.
+notes:
+- pms config file has changed and must be replaced. following two lines are changed:
+line 79: pms_acctrack_query = "SELECT HAT_TRACKER_DEADLINE, HAT_TRACKER_BILLED FROM ${t_acctrack} WHERE HAT_TRACKER_ZONEID = %{SCS-SPP-LocationID} AND HAT_TRACKER_USR = '%{SCS-SPP-StrippedUser}' AND Lower(HAT_TRACKER_PWD) = Lower('%%s')"
+line 83: pms_acc_upd_gid = "UPDATE ${t_acctrack} set HAT_TRACKER_GUEST_ID = '%%s' WHERE HAT_TRACKER_ZONEID = %{SCS-SPP-LocationID} AND HAT_TRACKER_USR = '%{SCS-SPP-StrippedUser}' AND Lower(HAT_TRACKER_PWD) = Lower('%%s')"
+
+2011.01.15 hspgw_v20110115
+==========================
+Feature improvements:
+- Extended radius.log: incoming and outgoing requests are now available in radius.log.
+- Changed format of radius.log: 
+  <date> <time> : <Session-ID> : <Zone-ID> :  <Log message> : [<client-IP/server-IP>]
+Bug fixes: 
+- Repeated connection requests to (PMS-) server corrected.
+- Removed the word Protel in all messages. 
+
+2010.11.01 hspgw_v20101101
+==========================
+Feature improvements:
+- pms_fias.c: extended hand shake sequence for FIAS by adding field id PI to the PR records.
+- pms_fias.c: extended PR request including PI field. Value of the PI field is the same as for the RN field.
+Bug fixes: 
+- n/a
+
+2010.06.24 hspgw_v20100624
+==========================
+Feature improvements:
+- Enhanced go-through functionality. Access is only granted if the request is received within a specific period after the first Socket- or Timeout-Error.
+Bug fixes:
+- n/a
+
+2010.02.24 hspgw_v20100224
+==========================
+Bug fixes:
+- Change pms_fias_findPassword, compare the name (instead of fullname) with PMS
+
+2010.02.11 hspgw_v20100211
+==========================
+Feature improvements:
+- Retry connection with PMS when socket error occurs
+
+2010.01.29 hspgw_v20100129
+==========================
+Feature improvements:
+- Add convert2ascii function for converting the pwd 
+
+2010.01.25 hspgw_v20100125
+==========================
+Feature improvements:
+- Added SessID, LocationID, Username (room number) to log functions pms_infoLog and pms_errLog
+Bug fixes:
+- Bugfix of buffer overflow in SessID attribute, Password Attribute and User-Name attribute
+
+2010.01.08 hspgw_v20100108
+==========================
+Feature improvements:
+- Created Datapool containing a PMS Socket for each PMS Server. 
+- New instantiation and detach function for the Datapool
+- Added Timeout counter to reset PMS Socket after a defined number of timeouts (see pms file)
+- Functions pms_verify_password and pms_proc_PR_posting hanle now the PMS Socket connection
+- Eliminated the use of pms_data at the instantiation, this information is read on the fly
+
+2009.12.16 hspgw_v20091216
+==========================
+Feature improvements:
+- accounting with new functions pms_infoLog and pms_errLog
+- Replaced mallocs with char array[], where possible
+- Added error handling in accounting
+- Added new log event SC_HSPGW_ACC_REJECTED
+- Added new log event SC_HSPGW_ACC_MISS_SESSID_ATTRIB
+
+2009.12.15 hspgw_v20091215
+==========================
+Feature improvements:
+- authorize and authenticate with new functions pms_infoLog and pms_errLog.
+- authorize and authenticate don't use data_pool anymore
+Bug fixes:
+- ";SPPID=" removed from replies
+

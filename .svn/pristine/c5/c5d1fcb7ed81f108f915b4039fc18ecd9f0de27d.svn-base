@@ -1,0 +1,559 @@
+/*
+ * File:   rlm_pms_1.h
+ * Author: hagen
+ *
+ * Created on 2. September 2009, 15:06
+ *
+ * Last changed: 12.01.2009 by Juan
+ */
+
+#ifndef _PMS_DL_H
+#define	_PMS_DL_H
+
+#ifdef HAVE_PTHREAD_H
+#include <pthread.h>
+#endif
+
+#include <freeradius-devel/ident.h>
+RCSIDH(other_h, "$Id$")
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
+#include	<ltdl.h>
+#ifdef	__cplusplus
+}
+#endif
+
+
+// PMS Attributes
+#define PW_LOCATION_NAME			2		// ATTRIBUTE WISPr-Location-Name 2
+#define PW_SCS_SPP_ZONEID			3000
+#define PW_SCS_SPP_STRIPPEDUSER		3001	// Stripped user from attribute User-Name
+#define PW_SCS_SPP_DECODEDPW		3002	// Stripped user from attribute User-Name
+#define PW_SCS_HSPGW_TARIFFID       3003    // Stripped tariff id from attribute User-Name
+#define PW_SCS_ACCOUNT_INFO			250     // ATTRIBUTE Cisco-SSG-Account-Info 250
+#define PMS_ZONEID_MAX_LEN		5
+#define PMS_GROUPID_MAX_LEN		5
+#define PMS_SESSIONID_MAX_LEN		40
+#define PMS_GUESTID_MAX_LEN		16
+#define PMS_USERNAME_MAX_LEN		40
+#define PMS_PASSWORD_MAX_LEN		40
+#define PMS_SEARCHPATTERN_MAX_LEN	40
+#define PMS_TARIFFKEY_MAX_LEN		40
+#define PMS_TARIFFID_MAX_LEN		40
+#define PMS_HSRMID_MAX_LEN		5
+#define PMS_AUT_ACC_TYPE_MAX_LEN	10	   // "PMS_" + PMS_HSRMID_MAX_LEN + '\0' = 10
+#define PMS_INIT_TIME			4		// sleep for initialization of the PMS interface
+
+
+#define PMS_TARIFF_PER_SESSION		"PER_SESSION"
+#define PMS_MAX_REPLY_MSG_LEN		64
+
+#define ASCEND_PORT_HACK
+#define ASCEND_CHANNELS_PER_LINE    23
+#define CISCO_ACCOUNTING_HACK
+
+
+// PMS FIAS specific
+#define BYTE unsigned char
+#define PROTEL_FIAS_SEARCH_PATTERN  "RN"
+
+
+/*
+ *  FIAS specific
+ */
+#define	MAX_FIAS_BUFFER_SIZE		1024
+#define MAX_FIAS_SEQUENCENUMBER		9999
+
+// Control
+#define PROTEL_FIAS_STX				'\x02'  // Start of text
+#define PROTEL_FIAS_ETX				'\x03'  // End of text
+//#define	PROTEL_FIAS_SPRTR		'\x7c'  // Separator ("|")
+#define PROTEL_FIAS_SPRTR			"|"		// Separator ('\x7c')
+// Record types
+#define PROTEL_FIAS_RECID_LS		"LS"	// LS Link Start		x4c53
+#define PROTEL_FIAS_RECID_LD		"LD"	// LD Link Description
+#define PROTEL_FIAS_RECID_LR		"LR"	// LR Link Record
+#define PROTEL_FIAS_RECID_LA		"LA"	// LA Link Alive		x4c41
+#define PROTEL_FIAS_RECID_LE		"LE"	// LA Link End		x4c45
+
+#define PROTEL_FIAS_RECID_PA		"PA"	// PA Posting Answer	x5041
+#define PROTEL_FIAS_RECID_PL		"PL"	// PL Posting List		x504c
+#define PROTEL_FIAS_RECID_DS		"DS"	// Database Resync start
+#define PROTEL_FIAS_RECID_DE		"DE"	// Database Resync end
+#define PROTEL_FIAS_RECID_GI		"GI"	// Guest Check-in
+#define PROTEL_FIAS_RECID_GO		"GO"	// Guest Check-out
+#define PROTEL_FIAS_RECID_GC		"GC"	// Guest Check-out
+
+
+
+// Configuration Records
+#define PROTEL_FIAS_LD_IFWW	 "LD|IFWW|V#HSPGW v%s|DA%s|TI%s|"
+#define PROTEL_FIAS_LR_RIPR	 "LR|RIPR|FLP#RNPIG#GNPTSOTACTWSDATI|"
+#define PROTEL_FIAS_LR_RIPA	 "LR|RIPA|FLP#RNASCTWSDATI|"
+#define PROTEL_FIAS_LR_RIPL	 "LR|RIPL|FLP#DATIRNG#GNNPWS|"
+
+#define PROTEL_FIAS_LR_RIGI	 "LR|RIGI|FLRNG#GSGNSFNPDATI|"
+#define PROTEL_FIAS_LR_RIGO	 "LR|RIGO|FLRNG#GSSFDATI|"
+#define PROTEL_FIAS_LR_RIGC	 "LR|RIGC|FLRNG#GSGNRONPDATI|"
+//#define PROTEL_FIAS_LR_RIDR	 "LR|RIDR|FLDATI|"
+//#define PROTEL_FIAS_LR_RIDS	 "LR|RIDS|FLDATI|"
+//#define PROTEL_FIAS_LR_RIDE	 "LR|RIDE|FLDATI|"
+
+#define PROTEL_FIAS_LS		 "LS|DA%s|TI%s|"
+#define PROTEL_FIAS_LA		 "LA|DA%s|TI%s|"
+#define PROTEL_FIAS_LE		 "LE|DA%s|TI%s|"
+
+// Request
+#define PROTEL_FIAS_PR_RN	 "PR|P#%d|PI%s|WS%s|DA%s|TI%s|"
+#define PROTEL_FIAS_PR_POS	 "PR|P#%d|RN%s|GN%s|G#%s|TA%s|PTC|CT%s|WS%s|DA%s|TI%s|"
+#define PROTEL_FIAS_DR		 "DR|DA%s|TI%s|"
+
+
+// Field contents
+#define PROTEL_FIAS_AS_OK	"OK"
+
+// Function to extract sub-attributes from Vendor WISPr
+// VENDOR   WISPr   14122   ietf
+#define WISPR2ATTR(x) ((14122 << 16) | (x))
+#define CISCO2ATTR(x) ((9 << 16) | (x))
+
+
+typedef struct pms_config {
+	char   *sql_instance_name;
+	// General PMS
+	char	*pms_all_config_query;
+	char	*pms_all_events_query;
+	char	*pms_config_query;
+	char	*pms_config_query_zid;
+	char 	*pms_acctrack_relogin_insert;
+	char    *pms_occupancy_relogin_insert;
+	char	*pms_acctrack_query;
+	char	*pms_acctrack_relogin_query;
+	char	*pms_occupancy_relogin_query;
+	char 	*pms_acc_qry_by_sessid;
+	char 	*pms_acc_qry_by_usrloc;
+	char	*pms_acctrack_insert;
+	char	*pms_acc_upd_gid;
+	char	*pms_acc_upd_billed;
+	char	*pms_acc_upd_billed_ses;
+	char	*pms_upd_activ_gw;
+	char	*pms_udp_dbsynch_ts;
+	char	*pms_acctrack_purge;
+	char	*pms_acctrack_relogin_purge;
+	char	*pms_logger_insert;
+	char	*pms_insert_chk_rn;
+	char	*pms_proc_go;
+	char	*pms_proc_gi;
+	char	*pms_proc_gc;
+//	char	*pms_relogin;
+	char    *pms_consolidate_db;
+	char    *pms_clear_timestamp;
+	char	*pms_set_ecot;
+	char	*pms_occup_by_gnrn;
+
+	char	*pms_conf_locid_delimiter;
+	char	*pms_conf_realm_delimiter;
+	char	*pms_conf_guestname_delimiter;
+	char	*pms_conf_allowed_realm;
+	char	*pms_conf_type_prefix;
+	char	*pms_snmptrap_command;
+	char    *pms_set_deadline;
+	char	*pms_conf_asok_msgs;
+	char	*pms_conf_ctmsg_del;
+
+	int		pms_conf_sckt_conn_timeout;
+	int		pms_conf_sckt_recv_ntimeout;
+	int		pms_conf_sckt_recv_utimeout;
+	int		pms_conf_sckt_max_trials;
+	int		pms_conf_sckt_max_timeouts;
+	int		pms_conf_sesto_threshold;
+
+	int		pms_connect_failure_retry_delay;
+
+	int    sqltrace;
+	int    do_clients;
+	char   *tracefile;
+	char   *xlat_name;
+	int    deletestalesessions;
+	int    num_sql_socks;
+	int    lifetime;
+	int    max_queries;
+	int    connect_failure_retry_delay;
+//	char   *postauth_query;
+	char   *pms_fias_allowed_chars;
+	int    query_timeout;
+	/* individual driver config */
+	void	*localcfg;
+} PMS_CONFIG;
+
+
+/*
+ *	A mapping of configuration file names to internal variables.
+ *
+ *	Note that the string is dynamically allocated, so it MUST
+ *	be freed.  When the configuration file parse re-reads the string,
+ *	it free's the old one, and strdup's the new one, placing the pointer
+ *	to the strdup'd string into 'config.string'.  This gets around
+ *	buffer over-flows.
+ */
+static const CONF_PARSER module_config[] = {
+	{"sql-instance-name",PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,sql_instance_name), NULL, "sql"},
+
+	{"pms_all_config_query", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_all_config_query), NULL, ""},
+	{"pms_config_query", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_config_query), NULL, ""},
+	{"pms_config_query_zid", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_config_query_zid), NULL, ""},
+	{"pms_acctrack_relogin_insert", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_acctrack_relogin_insert), NULL, ""},
+	{"pms_occupancy_relogin_insert", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_occupancy_relogin_insert), NULL, ""},
+	{"pms_acctrack_query", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_acctrack_query), NULL, ""},
+	{"pms_acctrack_relogin_query", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_acctrack_relogin_query), NULL, ""},
+	{"pms_occupancy_relogin_query", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_occupancy_relogin_query), NULL, ""},
+	{"pms_acctrack_insert", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_acctrack_insert), NULL, ""},
+	{"pms_acctrack_purge", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_acctrack_purge), NULL, ""},
+	{"pms_acctrack_relogin_purge", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_acctrack_relogin_purge), NULL, ""},
+	{"pms_logger_insert", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_logger_insert), NULL, ""},
+	{"pms_all_events_query", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_all_events_query), NULL, ""},
+	{"pms_acc_qry_by_sessid", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_acc_qry_by_sessid), NULL, ""},
+	{"pms_acc_qry_by_usrloc", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_acc_qry_by_usrloc), NULL, ""},
+	{"pms_acc_upd_gid", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_acc_upd_gid), NULL, ""},
+	{"pms_acc_upd_billed", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_acc_upd_billed), NULL, ""},
+	{"pms_acc_upd_billed_ses", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_acc_upd_billed_ses), NULL, ""},
+	{"pms_upd_activ_gw", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_upd_activ_gw), NULL, ""},
+	{"pms_udp_dbsynch_ts", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_udp_dbsynch_ts), NULL, ""},
+	{"pms_insert_chk_rn", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_insert_chk_rn), NULL, ""},
+	{"pms_proc_go", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_proc_go), NULL, ""},
+	{"pms_proc_gi", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_proc_gi), NULL, ""},
+	{"pms_proc_gc", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_proc_gc), NULL, ""},
+//	{"pms_relogin", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_relogin), NULL, ""},
+	{"pms_consolidate_db", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_consolidate_db), NULL, ""},
+	{"pms_clear_timestamp", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_clear_timestamp), NULL, ""},
+	{"pms_set_ecot", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_set_ecot), NULL, ""},
+	{"pms_set_deadline", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_set_deadline), NULL, ""},
+	{"pms_occup_by_gnrn", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_occup_by_gnrn), NULL, ""},
+	{"safe-characters", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_fias_allowed_chars), NULL,"@???abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_: /"},
+
+	{"pms_conf_locid_delimiter", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_conf_locid_delimiter), NULL, ","},
+	{"pms_conf_realm_delimiter", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_conf_realm_delimiter), NULL, "@"},
+	{"pms_conf_guestname_delimiter", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_conf_guestname_delimiter), NULL, "[;/]\\s*"},
+	{"pms_conf_allowed_realm", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_conf_allowed_realm), NULL, "hspgw"},
+	{"pms_conf_type_prefix", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_conf_type_prefix), NULL, "PMS_"},
+	{"pms_conf_asok_msgs", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_conf_asok_msgs), NULL, ""},
+	{"pms_conf_ctmsg_del", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_conf_ctmsg_del), NULL, ":"},
+
+	{"pms_conf_sckt_conn_timeout", PW_TYPE_INTEGER,offsetof(PMS_CONFIG,pms_conf_sckt_conn_timeout), NULL, "3"},
+	{"pms_conf_sckt_recv_ntimeout", PW_TYPE_INTEGER,offsetof(PMS_CONFIG,pms_conf_sckt_recv_ntimeout), NULL, "0"},
+	{"pms_conf_sckt_recv_utimeout", PW_TYPE_INTEGER,offsetof(PMS_CONFIG,pms_conf_sckt_recv_utimeout), NULL, "100000"},
+	{"pms_conf_sckt_max_trials", PW_TYPE_INTEGER,offsetof(PMS_CONFIG,pms_conf_sckt_max_trials), NULL, "30"},
+	{"pms_conf_sesto_threshold", PW_TYPE_INTEGER,offsetof(PMS_CONFIG,pms_conf_sesto_threshold), NULL, "30"},
+	{"pms_conf_sckt_max_timeouts", PW_TYPE_INTEGER,offsetof(PMS_CONFIG,pms_conf_sckt_max_timeouts), NULL, "3"},
+
+
+	{"pms_snmptrap_command", PW_TYPE_STRING_PTR,offsetof(PMS_CONFIG,pms_snmptrap_command), NULL, ""},
+
+	/*
+	 *	This only works for a few drivers.
+	 */
+	{"query_timeout", PW_TYPE_INTEGER,offsetof(PMS_CONFIG,query_timeout), NULL, NULL},
+  { NULL, -1, 0, NULL, NULL }		/* end the list */
+};
+
+// Configuration Data
+typedef struct pms_data {
+	char	zoneid[PMS_ZONEID_MAX_LEN + 1];  // i.e. max. ID '9999' + '\0': 4 + 1 = 5
+	int 	group;
+	char	ipaddr[16]; // Length of Oracle database column + 1 for '\0': 15 + 1 = 16
+	char	port[7];	// Length of Oracle database column + 1 for '\0': 6 + 1 = 7
+	int		protocol;
+	char	sesto[7];		// Sufficient for about 10 days ('864000' sec) + 1 for '\0': 6 + 1 = 7
+	char	amount[8];		// Max. amount (in cents) '9999999' + '\0': 7 + 1 = 8
+	char	usrfld[11];		// Field_Name_1 column length + 1 for '\0': 10 + 1 = 11
+	char	pwfld[11];		// Field_Name_2 column length + 1 for '\0': 10 + 1 = 11
+	int		tariffid;
+	char	tariff_key[21]; // Length of Oracle database column + 1 for '\0': 20 + 1 = 21
+	int		go_through;
+	char	hsrmid[PMS_HSRMID_MAX_LEN + 1];		// i.e. max. ID '99999' + '\0': 5 + 1 = 6
+	int		is_enabled;
+	int		go_through_period; // Number of seconds to allow login after PMS is disconnected
+	int		go_through_deadline; // Logins are allowed until this date is reached if the PMS id down (time of first failure + go_through_period)
+	char	config_id[PMS_ZONEID_MAX_LEN + 1];
+	int		max_sim_sess;		// maximum simultaneous sessions
+	char	active_gw[40];		// host name of current competent gateway node
+	int		ecot;				// latest possible check-out time
+	int		bw_profile_id;		// bandwidth profile id
+} pms_data;
+
+// PMS Socket
+typedef struct pms_socket {
+	//enum { pmssockconnected = 1, pmssockunconnected = 2, pending = 4 } state;
+	enum State { pmssockconnected, pmssockunconnected, pending } state;
+	int		shutdown;
+	int		sockfd;
+	int		seqnumber;
+	int		timeouts;
+	char	ipaddr[16]; // Length of Oracle database column + 1 for '\0': 15 + 1 = 16
+	char 	port[7];
+	struct message_queue *snd_msg_queue;
+	struct message_queue *rcv_msg_queue;
+#ifdef HAVE_PTHREAD_H
+	pthread_t thread;
+	pthread_mutex_t socket_mutex;
+	pthread_mutex_t sndqueue_mutex;
+	pthread_mutex_t rcvqueue_mutex;
+	pthread_cond_t cond_rcvmsg;
+	pthread_mutex_t cond_rcvmsg_mutex;
+	pthread_cond_t cond_rstthread;
+	pthread_mutex_t cond_rstthread_mutex;
+
+#endif
+} PMS_SOCKET;
+
+// Struct for the pms data list
+typedef struct pms_data_list {
+	pms_data *pmsdata;
+	struct pms_data_list *next;
+} PMS_DATA_LIST;
+
+
+// Struct for the socket pool
+typedef struct pms_socket_pool {
+	int zoneid;
+	PMS_SOCKET *sckt;
+	struct pms_socket_pool *next;
+} PMS_SOCKET_POOL;
+
+typedef struct message_queue {
+	int		seqnumber;
+	char message[MAX_FIAS_BUFFER_SIZE];
+	struct message_queue *next;
+} SEND_MESSAGE_QUEUE, RECEIVE_MESSAGE_QUEUE;
+
+// Struct for the data pool
+typedef struct pms_data_pool {
+	PMS_SOCKET_POOL *socketpool;
+#ifdef HAVE_PTHREAD_H
+	pthread_mutex_t mutex;
+#endif
+} PMS_DATA_POOL;
+
+
+// Account Tracker data
+typedef struct pms_tracker_data {
+	char	zoneid[PMS_ZONEID_MAX_LEN + 1];  // i.e. max. ID '9999' + '\0': 4 + 1 = 5
+	char	usr[PMS_USERNAME_MAX_LEN + 1];			// ACCOUNT_TRACKER_USR column length  + 1 for '\0'
+	char	pwd[PMS_PASSWORD_MAX_LEN + 1];			// ACCOUNT_TRACKER_PWD column length  + 1 for '\0'
+	char 	pwd2[PMS_PASSWORD_MAX_LEN + 1];			// ACCOUNT_TRACKER_PWD column length  + 1 for '\0'
+	char	sessid[PMS_SESSIONID_MAX_LEN + 1];		// ACCOUNT_TRACKER_SESS_ID column length  + 1 for '\0'
+	int     tariffid;
+	char	tariff_key[21]; // Length of Oracle database column + 1 for '\0': 20 + 1 = 21
+	int     deadline;
+	int		billed;
+	char	guestid[PMS_GUESTID_MAX_LEN + 1];	// Length of Oracle database column + 1 for '\0': 16 + 1 = 17
+	char	sesto[7];		// Sufficient for about 10 days ('864000' sec) + 1 for '\0': 6 + 1 = 7
+	struct pms_tracker_data *next;
+} pms_tracker_data;
+
+
+// Logger data
+typedef struct pms_logger_data {
+	int		zoneid;
+	int		hsrmid;
+	int		logeventid;		// Log Event ID
+	char	logdescr[101];	// Length of Oracle database column + 1 for '\0': 100 + 1 = 101
+} pms_logger_data;
+
+
+// Log file data
+typedef struct pms_logfile_data {
+	char	sessid[PMS_SESSIONID_MAX_LEN + 1];
+	char	zoneid[PMS_ZONEID_MAX_LEN + 1];
+	char	username[PMS_USERNAME_MAX_LEN + 1];
+	char	hsrmid[PMS_HSRMID_MAX_LEN + 1];		// i.e. max. ID '99999' + '\0': 5 + 1 = 6
+	char    tariffid[PMS_TARIFFID_MAX_LEN + 1];
+} pms_logfile_data;
+
+
+// Log events
+typedef struct pms_log_events {
+	int		id;
+	char	key[49];	// Length of Oracle database column + 1 for '\0': 32 + 1 = 33
+	char	type[21];
+	char	level[21];
+	char	postcond[65];
+	char	format[43];  // (key) + (appendix) + '\0': 43
+	struct pms_log_events *next;
+} PMS_LOGEVENTS;
+
+// The instance
+typedef struct rlm_pms_1_module_t {
+	SQL_INST *sql_inst;
+
+	char				*rcode_str;
+	int					rcode;
+
+	SQLSOCK				*sqlpool;
+	SQLSOCK				*last_used;
+
+	lt_dlhandle			handle;
+	PMS_CONFIG			*config;
+	PMS_DATA_POOL		*datapool;
+	PMS_LOGEVENTS		*logevents;
+	size_t (*pms_fias_sql_escape_func)(char *out, size_t outlen, const char *in);
+
+	char				hostname[40];
+
+} rlm_pms_1_module_t;
+
+
+
+
+
+
+
+//#define PROTEL_FIAS_PR_RN	 "PR|P#%d|PI%s|DA%s|TI%s|PMROOM|"
+
+// Struct for FIAS triplets
+typedef struct pms_fias_guestlist {
+  char	roomnumber[PMS_USERNAME_MAX_LEN + 1];   // ACCOUNT_TRACKER_USR column length  + 1 for '\0'
+  char	guestid[PMS_GUESTID_MAX_LEN + 1];		// PMS_GUESTID_MAX_LEN + 1 for '\0'
+  char	guestname[PMS_PASSWORD_MAX_LEN + 1];	// ACCOUNT_TRACKER_PWD column length  + 1 for '\0'
+  char	guestname2[PMS_PASSWORD_MAX_LEN + 1];	// ACCOUNT_TRACKER_PWD column length  + 1 for '\0'
+  struct pms_fias_guestlist *next;
+} PMS_FIAS_GUESTLIST;
+
+// Struct for FIAS packet data
+typedef struct pms_fias_packet {
+  char	recordtype[3];	// e.g. 'PL' + '\0': 2 + 1 = 3
+  int	seqnumber;	// max length 4
+  char	date[7];
+  char	time[7];
+  char	answstatus[3];	// PA packets only. E.g. 'NG' + '\0': 2 + 1 = 3
+  char	cleartxt[51];	// max length + '\0': 50 + 1 = 51
+  int	isdbsynch;		// 1: is dbsynch,  0: is realtime
+  int	shared;			// 1: room shared, 0: room not shared
+  int	nopost;			// 1: no post, 0: post
+  char  ronumber[PMS_USERNAME_MAX_LEN + 1];  // old room number
+  char	wsid[16];
+  PMS_FIAS_GUESTLIST *guestlist;
+} PMS_FIAS_PACKET;
+
+
+// Struct for thread arugment
+typedef struct pms_thread_arg {
+	rlm_pms_1_module_t *instance;
+	PMS_SOCKET *pmssocket;
+	pms_data *pmsdata;
+} PMS_THREAD_ARG;
+
+
+
+#ifdef HAVE_PTHREAD_H
+#endif
+
+static int pms_fias_findPassword(char *name, char *password, int ignorecase);
+static PMS_FIAS_PACKET *pms_fias_splitPacket(char *message);
+static int pms_fias_validatePacket(char *message, PMS_FIAS_PACKET *packet);
+static PMS_FIAS_GUESTLIST *pms_fias_insertGuestData(PMS_FIAS_GUESTLIST *guestlist, char *roomnumber, char *guestid, char *guestname);
+static PMS_FIAS_GUESTLIST *pms_fias_createGuestData(char *roomnumber, char *guestid, char *guestname);
+static PMS_FIAS_GUESTLIST *pms_fias_findLastGuestData(PMS_FIAS_GUESTLIST *guestlist);
+static void pms_fias_printPacket(PMS_FIAS_PACKET *packet);
+static int pms_fias_getSeqNr(int seqnumber);
+
+
+static int pms_fias_recprocmgs(void *instance, PMS_SOCKET *pmssocket, pms_data *pmsdata);
+//int pms_fias_receiveAndHandleMessages(void *instance, PMS_SOCKET *pmssocket, pms_data *pmsdata, SQLSOCK *sqlsckt);
+static int pms_fias_send_config_records(PMS_SOCKET *pmssocket, pms_data *pmsdata);
+static int pms_fias_send_packet(PMS_SOCKET *pmssocket, char *msg, pms_data *pmsdata);
+static int send_last_packet(PMS_SOCKET *pmssocket, char *msg, pms_data *pmsdata);
+static int pms_fias_receive(PMS_SOCKET *pmssocket, char *buffer);
+static int pms_fias_check_packet_type(char *msg, char *msgtype);
+static int pms_fias_connect(void *instance, PMS_SOCKET *pmssocket);
+static int pms_fias_create_socket(int *sockfd);
+static int pms_fias_connect_on_socket(void *instance, PMS_SOCKET *pmssocket);
+static int pms_fias_unlockSocket(PMS_SOCKET *pmssocket);
+static int pms_fias_close_socket(PMS_SOCKET *pmssocket);
+static int pms_fias_send_message(PMS_SOCKET *pmssocket, char message[MAX_FIAS_BUFFER_SIZE]);
+static int pms_fias_fcntl_socket(int fd, int cmd, int arg);
+
+static void* pms_fias_thread_proc(void *arg);
+
+extern int convert2ascii(char *out, int outlen, char *in);
+extern int	parse_repl(char *out, int outlen, const char *fmt, REQUEST *request, RADIUS_ESCAPE_STRING func);
+
+static void dupquotes ( char *strout, char *strin );
+static int pms_fias_dbLogger(void *instance, REQUEST *request, pms_logger_data *loggerdata);
+static int pms_fias_prepareLogData(pms_logger_data **loggerdata, char *zoneid, char *hsrmid, int logeventid, char *logdescr);
+static int pms_fias_initDataPool(void *instance);
+static void pms_fias_freeDataPool(void *instance);
+static int pms_fias_initLogEventPool(void *instance);
+static void pms_fias_freeLogEventPool(void *instance);
+static PMS_LOGEVENTS *pms_fias_insertLogEvent(PMS_LOGEVENTS *list, SQL_ROW row);
+static int pms_fias_containsLogEvent(PMS_LOGEVENTS *list, SQL_ROW row);
+static PMS_LOGEVENTS *pms_fias_findLogEventKey(PMS_LOGEVENTS *list, char *eventkey);
+static PMS_LOGEVENTS *pms_fias_createLogEvent(SQL_ROW row);
+static int pms_fias_sizeLogEvent(PMS_LOGEVENTS *list);
+static void pms_fias_infoLog(char *msgtxt, char *eventkey, void *instance, pms_logfile_data *logfiledata, REQUEST *request);
+static void pms_fias_errLog(char *msgtxt, char *eventkey, void *instance, pms_logfile_data *logfiledata, REQUEST *request);
+static void pms_fias_snmpTrap(char *zoneId, char *eventKey,char *msgtxt, void *instance, REQUEST *request);
+static PMS_SOCKET *pms_fias_find_SocketData(PMS_SOCKET_POOL *socketpool, char *ip, char *port);
+static void pms_fias_releaseSocket(PMS_SOCKET *pmssocket);
+static int pms_fias_verify_password(void *instance, pms_tracker_data **tracker, pms_data *list, PMS_SOCKET *pmssocket);
+static int pms_fias_proc_PR_posting(void *instance, pms_tracker_data **tracker, pms_data *pmsdata, PMS_SOCKET *pmssocket);
+static int pms_fias_accTrackerPurge(void *instance, REQUEST *request);
+static int pms_fias_accTrackerFind(void *instance, REQUEST *request, int *deadline);
+static int pms_fias_accTrackerInsert(void *instance, REQUEST *request, pms_tracker_data *trckrdata);
+static int pms_fias_accUpdateGid(void *instance, REQUEST *request, pms_tracker_data *trckrdata);
+static int pms_fias_accUpdBilled(void *instance, REQUEST *request, pms_data *pmsdata);
+static int pms_checkedin(void *instance, REQUEST *request, pms_tracker_data **tracker);
+//PMS_SOCKET *pms_fias_insertSocketPool(void *instance, SQL_ROW row);
+static PMS_SOCKET *pms_fias_insertSocketPool(void *instance, pms_data *pmsdata);
+static int pms_fias_containsSocketData(PMS_SOCKET_POOL *socketpool, SQL_ROW	row);
+//PMS_SOCKET *pms_fias_createSocketData(SQL_ROW row);
+static PMS_SOCKET *pms_fias_createSocketData(pms_data *pmsdata);
+static int spp_set_gothrough_deadline(void *instance, int deadline, pms_data *pmsdata);
+static void pms_fias_startthread(void *instance, PMS_SOCKET *pmssocket, pms_data *pmsdata);
+static int pms_fias_handle_message(void *instance, PMS_SOCKET* socket,  char* message, pms_data *pmsdata);
+static int get_posting_answer(PMS_SOCKET *pmssocket, char *message, int seqnumber, char *type);
+static int pms_fias_get_message(PMS_SOCKET *pmssocket, char *message, int seqnumber, char *type);
+static int pms_fias_freeReceiveMessageQueue(PMS_SOCKET *pmssocket);
+static int pms_fias_freeSendMessageQueue(PMS_SOCKET *pmssocket);
+static struct pms_data *pms_fias_createConfigData(SQL_ROW row);
+static int pms_fias_disconnect(PMS_SOCKET *pmssocket);
+static void pms_fias_freeSocketData(PMS_SOCKET *pmssocket);
+static void freepl(PMS_DATA_LIST *pl);
+static void pms_fias_insertReceiveMessage(char *message, PMS_SOCKET *pmssocket);
+static int pms_fias_invalidateMessage(PMS_SOCKET* pmssocket, int seqnumber, char* type);
+//int pms_fias_removeInvalidateMessages(PMS_SOCKET* pmssocket);
+static int pms_fias_connect(void *instance, PMS_SOCKET *pmssocket);
+static int pms_fias_lockSocket(PMS_SOCKET *pmssocket);
+static int pms_fias_lockSendQueue(PMS_SOCKET *pmssocket);
+static int pms_fias_unlockSendQueue(PMS_SOCKET *pmssocket);
+static int pms_fias_lockReceiveQueue(PMS_SOCKET *pmssocket);
+static int pms_fias_unlockReceiveQueue(PMS_SOCKET *pmssocket);
+static int pms_fias_waitThreadRestart(PMS_SOCKET *pmssocket, int round);
+static int pms_fias_waitReceiveMessage(PMS_SOCKET *pmssocket);
+static int pms_fias_notifyThreadRestart(PMS_SOCKET *pmssocket);
+static int pms_fias_removeInvalidateMessages(PMS_SOCKET* pmssocket);
+static int upd_active_gw(void *instance, REQUEST *request, pms_data *pmsdata);
+static int get_pms_data(pms_data **pmsdata, void *instance, char *qs);
+static int get_pmsdatalist(PMS_DATA_LIST **pmsdatalist, void *instance, pms_logfile_data *logfiledata, char *qs, char *scope);
+static void reorder_pmsdatalist(PMS_DATA_LIST **pmsdatalist_ptr, char *zoneid_start);
+static void proc_GO(void *instance, PMS_FIAS_PACKET *pkt, pms_data *pmsdata);
+static void proc_GI(void *instance, PMS_FIAS_PACKET *pkt, pms_data *pmsdata);
+static void proc_GC(void *instance, PMS_FIAS_PACKET *pkt, pms_data *pmsdata);
+//static void proc_relogin(void *instance, pms_data *pmsdata, char *p_mac_address, char *p_client_ip);
+static void pms_fias_upd_dbs_ts(void *instance, pms_data *pmsdata);
+static void pms_set_ecot(void *instance, pms_data *pmsdata, int ecot);
+static void pms_fias_consolidate_DB(void *instance, pms_data *pmsdata) ;
+static int sendDR(PMS_SOCKET *pmssocket);
+static void changeSockState(PMS_SOCKET *pmssocket, enum State sockstate, int shutdown);
+static int pms_fias_ist_connected(int sockfd);
+static int is_obsolete(time_t ecot);
+static void pms_fias_occupancyInsert(void *instance, pms_tracker_data *trckrdata, pms_data *pmsdata);
+static int pms_fias_accTrackerReloginInsert(void *instance, REQUEST *request, pms_tracker_data *trckrdata, int trackerId, char* mac, char* ip, int group, int webproxy);
+static int pms_fias_occupancyReloginInsert(void *instance, REQUEST *request, pms_tracker_data *trckrdata, int occupancyId, char *mac, char *ip, int group, int webproxy);
+static int convertToGuestlist (char guestnames[][PMS_PASSWORD_MAX_LEN + 1], char *guestname, char *delim);
+static void convertRadiusIpAddress (char* dest, char *source);
+static void trim (char *s);
+static int extract_webproxy_from_account_info (char* string);
+#endif	/* _PMS_DL_H */

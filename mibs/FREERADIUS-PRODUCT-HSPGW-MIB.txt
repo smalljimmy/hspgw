@@ -1,0 +1,90 @@
+FREERADIUS-PRODUCT-HSPGW-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+	MODULE-IDENTITY,
+	OBJECT-IDENTITY,
+	NOTIFICATION-TYPE
+		FROM SNMPv2-SMI
+	freeRadiusProducts
+		FROM FREERADIUS-SMI;
+
+
+
+hspgw MODULE-IDENTITY
+    LAST-UPDATED "201106220000Z"
+    ORGANIZATION "WDW Consulting Swiss GmbH"
+	CONTACT-INFO
+		"Hotspot partner gateway development
+		
+		see http://www.wdw-consulting.com for contact persons of a particular
+		area or subproject of HSPGW.
+
+		Administrative contact for MIB module:
+
+		Hagen Muench
+		
+		email:    info.swiss@wdw-consulting.com"
+	DESCRIPTION
+		"The product registrations for the FreeRADIUS SNMP subagent.
+		These registrations are guaranteed to be unique and are used
+		for SMUX registration by default (if not overridden manually)."
+	::= { freeRadiusProducts 2 }
+
+
+eventMsgVars OBJECT IDENTIFIER ::= { hspgw 2 }
+
+zoneID OBJECT-TYPE
+	SYNTAX INTEGER
+	MAX-ACCESS accessible-for-notify
+	STATUS current
+	DESCRIPTION "Id of the affected zone"
+::= { eventMsgVars 1 }
+
+locID OBJECT-TYPE
+	SYNTAX INTEGER
+	MAX-ACCESS accessible-for-notify
+	STATUS obsolete
+	DESCRIPTION "Id of the affected location"
+::= { eventMsgVars 2 }
+
+locName OBJECT-TYPE
+	SYNTAX SnmpAdminString
+	MAX-ACCESS accessible-for-notify
+	STATUS obsolete
+	DESCRIPTION "Name of the affected location; obsolete since the name is not available"
+::= { eventMsgVars 3 }
+
+eventKey OBJECT-TYPE
+	SYNTAX STRING
+	MAX-ACCESS accessible-for-notify
+	STATUS current
+	DESCRIPTION "Event key as defined in SPP-DB"
+::= { eventMsgVars 4 }
+
+eventMsg OBJECT-TYPE
+	SYNTAX SnmpAdminString
+	MAX-ACCESS accessible-for-notify
+	STATUS current
+	DESCRIPTION "Event key as defined in SPP-DB"
+::= { eventMsgVars 5 }
+
+
+protocols OBJECT IDENTIFIER ::= { hspgw 1 } 
+
+-- protocol id 1
+----------------
+prot-1 OBJECT-IDENTITY
+	STATUS  current
+	DESCRIPTION
+		"protocol with ID 1"
+	::= { protocols 1 }
+
+Prot-1-Notif NOTIFICATION-TYPE
+    OBJECTS { zoneID, eventKey, eventMsg }
+    STATUS      current
+    DESCRIPTION
+        "Critical events."
+::= { prot-1 1 }
+
+
+END

@@ -1,0 +1,8 @@
+include ../../../../../Make.inc
+
+TARGET  = rlm_sql_sqlrelay
+SRCS = sql_sqlrelay.c
+RLM_SQL_CFLAGS  = $(INCLTDL) -I@sqlrelay_include_dir@ 
+RLM_SQL_LIBS    = -L@sqlrelay_lib_dir@ -lsqlrclientwrapper -lsqlrclient -lrudiments -lm
+
+include ../rules.mak
